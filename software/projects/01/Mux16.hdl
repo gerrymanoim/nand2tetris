@@ -14,5 +14,71 @@ CHIP Mux16 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    Not(in=sel, out=nsel);
+    
+    And(a=a[0], b=nsel, out=nsela0);
+    And(a=b[0], b=sel, out=selb0);
+    Or(a=nsela0, b=selb0, out=out[0]);
+
+    And(a=a[1], b=nsel, out=nsela1);
+    And(a=b[1], b=sel, out=selb1);
+    Or(a=nsela1, b=selb1, out=out[1]);
+
+    And(a=a[2], b=nsel, out=nsela2);
+    And(a=b[2], b=sel, out=selb2);
+    Or(a=nsela2, b=selb2, out=out[2]);
+
+    And(a=a[3], b=nsel, out=nsela3);
+    And(a=b[3], b=sel, out=selb3);
+    Or(a=nsela3, b=selb3, out=out[3]);
+
+    And(a=a[4], b=nsel, out=nsela4);
+    And(a=b[4], b=sel, out=selb4);
+    Or(a=nsela4, b=selb4, out=out[4]);
+
+    And(a=a[5], b=nsel, out=nsela5);
+    And(a=b[5], b=sel, out=selb5);
+    Or(a=nsela5, b=selb5, out=out[5]);
+
+    And(a=a[6], b=nsel, out=nsela6);
+    And(a=b[6], b=sel, out=selb6);
+    Or(a=nsela6, b=selb6, out=out[6]);
+
+    And(a=a[7], b=nsel, out=nsela7);
+    And(a=b[7], b=sel, out=selb7);
+    Or(a=nsela7, b=selb7, out=out[7]);
+
+    And(a=a[8], b=nsel, out=nsela8);
+    And(a=b[8], b=sel, out=selb8);
+    Or(a=nsela8, b=selb8, out=out[8]);
+
+    And(a=a[9], b=nsel, out=nsela9);
+    And(a=b[9], b=sel, out=selb9);
+    Or(a=nsela9, b=selb9, out=out[9]);
+
+    And(a=a[10], b=nsel, out=nsela10);
+    And(a=b[10], b=sel, out=selb10);
+    Or(a=nsela10, b=selb10, out=out[10]);
+
+    And(a=a[11], b=nsel, out=nsela11);
+    And(a=b[11], b=sel, out=selb11);
+    Or(a=nsela11, b=selb11, out=out[11]);
+
+    And(a=a[12], b=nsel, out=nsela12);
+    And(a=b[12], b=sel, out=selb12);
+    Or(a=nsela12, b=selb12, out=out[12]);
+
+    And(a=a[13], b=nsel, out=nsela13);
+    And(a=b[13], b=sel, out=selb13);
+    Or(a=nsela13, b=selb13, out=out[13]);
+
+    And(a=a[14], b=nsel, out=nsela14);
+    And(a=b[14], b=sel, out=selb14);
+    Or(a=nsela14, b=selb14, out=out[14]);
+
+    And(a=a[15], b=nsel, out=nsela15);
+    And(a=b[15], b=sel, out=selb15);
+    Or(a=nsela15, b=selb15, out=out[15]);
+
+
 }
