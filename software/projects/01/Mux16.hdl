@@ -14,6 +14,7 @@ CHIP Mux16 {
     OUT out[16];
 
     PARTS:
+    // note I should have just used `Mux` like a normal person
     Not(in=sel, out=nsel);
     
     And(a=a[0], b=nsel, out=nsela0);

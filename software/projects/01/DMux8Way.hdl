@@ -27,4 +27,11 @@ CHIP DMux8Way {
     And(a=ef, b=bf, out=f);
     And(a=gh, b=cg, out=g);
     And(a=gh, b=dh, out=h);
+
+
+    // Note a much better way to do this
+    // DMux(in=in, sel=sel[2], a=first, b=second);
+    // DMux4Way(in=first, sel[0]=sel[0], sel[1]=sel[1], a=a, b=b, c=c, d=d);
+    // DMux4Way(in=second, sel[0]=sel[0], sel[1]=sel[1], a=e, b=f, c=g, d=h);
+
 }

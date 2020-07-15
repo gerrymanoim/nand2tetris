@@ -31,5 +31,7 @@ CHIP DMux4Way {
     And(a=sel[0], b=sel[1], out=andsel);
     And(a=andsel, b=in, out=d);
 
+    // Note you can do this using 3 dmuxs
+
 }
 
