@@ -102,6 +102,7 @@ class Parser:
         self.output_filepath = output_filepath
         self.symbol_table = PREDEFINED_SYMBOL_TABLE.copy()
         self.symbol_table_next_slot = 16
+        self.seen_syms = list()
 
     def processed_lines(self) -> Iterator[str]:
         """
@@ -111,22 +112,21 @@ class Parser:
         3. start with () -> label declaration
         4. otherwise a c instruct
         """
-        label_offset = 0
+        instruction_count = 0
         for i, line in enumerate(self.input_lines):
             line = line.strip()
-            print(line)
             if len(line) == 0 or line.isspace() or line.startswith("//"):
                 # line is empty or a comment
                 continue
             elif line.startswith("@"):
+                instruction_count += 1
                 yield self._assemble_a_instruction(line[1:])
             elif line.startswith("("):
                 label = line.strip("()")
-                next_instruction_location = i + label_offset
-                self.symbol_table[label] = next_instruction_location
-                label_offset += 1
-                yield "{" + label + "}"
+                self.symbol_table[label] = instruction_count
+                continue
             else:
+                instruction_count += 1
                 yield self._assemble_c_instruction(line)
 
     def _assemble_a_instruction(self, instruction: str) -> str:
@@ -136,10 +136,9 @@ class Parser:
         try:
             return "0{:015b}".format(int(instruction))
         except ValueError:
-            if instruction not in self.symbol_table:
-                self.symbol_table[instruction] = self.symbol_table_next_slot
-                self.symbol_table_next_slot += 1
-            return "{" + instruction + "}"
+            self.seen_syms.append(instruction)
+            # hack to get names with dots working
+            return "{0[" + instruction + "]}"
 
     def _assemble_c_instruction(self, instruction: str) -> str:
         """
@@ -163,8 +162,11 @@ class Parser:
 
     def assemble(self):
         out = "\n".join(line for line in self.processed_lines())
-        print(out)
-        out = out.format_map(self.symbol_table)
+        for sym in self.seen_syms:
+            if sym not in self.symbol_table:
+                self.symbol_table[sym] = self.symbol_table_next_slot
+                self.symbol_table_next_slot += 1
+        out = out.format(self.symbol_table)
         self.output_filepath.write_text(out)
 
 
