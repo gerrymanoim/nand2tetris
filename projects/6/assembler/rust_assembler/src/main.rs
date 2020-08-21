@@ -1,34 +1,23 @@
 use std::env;
 
 use std::fs::File;
+use std::io::prelude::*;
 use std::io::{self, BufRead};
 use std::path::Path;
 
 use std::collections::{HashMap, HashSet};
 
+extern crate strfmt;
+use strfmt::strfmt;
+
+
 // TODO - should I use &str with a lifetime based on the struct?
 struct Assembler<'a> {
-    input_lines: io::Lines<io::BufReader<File>>,
-    output_filepath: String,
     seen_syms: HashSet<String>,
-    instruction_count: u16,
-    symbol_table: HashMap<&'a str, String>,
+    symbol_table: HashMap<String, String>,
     comp_table: HashMap<&'a str, &'a str>,
     dest_table: HashMap<&'a str, &'a str>,
     jump_table: HashMap<&'a str, &'a str>,
-}
-
-impl Iterator for Assembler<'_> {
-    type Item = String; // TODO wtf is an item
-
-    fn next(&mut self) -> Option<String> {
-        let line = match self.input_lines.next() {
-            Some(line) => line.unwrap(),
-            None => return None
-        };
-
-        Some(line)
-    }
 }
 
 impl Assembler<'_> {
@@ -66,27 +55,45 @@ impl Assembler<'_> {
         );
     }
 
-    fn assemble(&self) {
+    fn assemble(&mut self, input_lines: io::Lines<io::BufReader<File>>) -> String {
         let mut instruction_count = 0;
-        let mut lines = Vec::new();
-        for line in self.input_lines {
+        let mut output_lines = Vec::new();
+        // I think I use for since I am doing this for side effects?
+
+        for line in input_lines {
+            let n_line = line.unwrap_or("".to_string());
             // TODO - should I be using a match here instead?
-            let line = line.unwrap();
-            if line.starts_with("//") || line.trim().is_empty()  {
+            if n_line.starts_with("//") || n_line.trim().is_empty() {
                 continue;
-            }
-            else if line.starts_with("@") {
+            } else if n_line.starts_with("@") {
                 instruction_count += 1;
-                lines.push(self.assemble_a_instruction(&line));
-            }
-            else if line.starts_with("(") {
-                let label = line.trim_matches(|c| c == '(' || c == ')');
-                self.symbol_table.insert(label, format!("{:016b}", instruction_count));
+                let a_instruction = self.assemble_a_instruction(&n_line[1..]);
+                output_lines.push(a_instruction)
+            } else if n_line.starts_with("(") {
+                let label = n_line.trim_matches(|c| c == '(' || c == ')').to_string();
+                self.symbol_table
+                    .insert(label, format!("{:016b}", instruction_count));
             } else {
                 instruction_count += 1;
-                lines.push(self.assemble_c_instruction(&line));
+                let c_instruction = self.assemble_c_instruction(&n_line);
+                output_lines.push(c_instruction);
             }
+        }
+
+        let mut symbol_table_next_slot = 16;
+        for sym in self.seen_syms.iter() {
+            if !self.symbol_table.contains_key(sym) {
+                self.symbol_table
+                    .insert(sym.to_string(), format!("{:016b}", symbol_table_next_slot));
+                symbol_table_next_slot += 1;
+            }
+        }
+        let out = match strfmt(&output_lines.join("\n"), &self.symbol_table) {
+            Err(why) => panic!("Something went wrong formatting {}", why),
+            Ok(output) => output
         };
+
+        out
     }
 }
 
@@ -98,38 +105,35 @@ fn main() -> Result<(), io::Error> {
 
     let lines = match read_lines(&args[1]) {
         Ok(lines) => lines,
-        Err(e) => panic!("could not read file {}", e)
+        Err(e) => panic!("could not read file {}", e),
     };
 
-    let assembler = Assembler {
-        input_lines: lines,
-        output_filepath: String::from(&args[2]),
+    let mut assembler = Assembler {
         seen_syms: HashSet::new(),
-        instruction_count: 0,
         symbol_table: [
-            ("R0", format!("{:016b}", 0)),
-            ("R1", format!("{:016b}", 1)),
-            ("R2", format!("{:016b}", 2)),
-            ("R3", format!("{:016b}", 3)),
-            ("R4", format!("{:016b}", 4)),
-            ("R5", format!("{:016b}", 5)),
-            ("R6", format!("{:016b}", 6)),
-            ("R7", format!("{:016b}", 7)),
-            ("R8", format!("{:016b}", 8)),
-            ("R9", format!("{:016b}", 9)),
-            ("R10", format!("{:016b}", 10)),
-            ("R11", format!("{:016b}", 11)),
-            ("R12", format!("{:016b}", 12)),
-            ("R13", format!("{:016b}", 13)),
-            ("R14", format!("{:016b}", 14)),
-            ("R15", format!("{:016b}", 15)),
-            ("SCREEN", format!("{:016b}", 16384)),
-            ("KBD", format!("{:016b}", 24576)),
-            ("SP", format!("{:016b}", 0)),
-            ("LCL", format!("{:016b}", 1)),
-            ("ARG", format!("{:016b}", 2)),
-            ("THIS", format!("{:016b}", 3)),
-            ("THAT", format!("{:016b}", 4)),
+            ("R0".to_string(), format!("{:016b}", 0)),
+            ("R1".to_string(), format!("{:016b}", 1)),
+            ("R2".to_string(), format!("{:016b}", 2)),
+            ("R3".to_string(), format!("{:016b}", 3)),
+            ("R4".to_string(), format!("{:016b}", 4)),
+            ("R5".to_string(), format!("{:016b}", 5)),
+            ("R6".to_string(), format!("{:016b}", 6)),
+            ("R7".to_string(), format!("{:016b}", 7)),
+            ("R8".to_string(), format!("{:016b}", 8)),
+            ("R9".to_string(), format!("{:016b}", 9)),
+            ("R10".to_string(), format!("{:016b}", 10)),
+            ("R11".to_string(), format!("{:016b}", 11)),
+            ("R12".to_string(), format!("{:016b}", 12)),
+            ("R13".to_string(), format!("{:016b}", 13)),
+            ("R14".to_string(), format!("{:016b}", 14)),
+            ("R15".to_string(), format!("{:016b}", 15)),
+            ("SCREEN".to_string(), format!("{:016b}", 16384)),
+            ("KBD".to_string(), format!("{:016b}", 24576)),
+            ("SP".to_string(), format!("{:016b}", 0)),
+            ("LCL".to_string(), format!("{:016b}", 1)),
+            ("ARG".to_string(), format!("{:016b}", 2)),
+            ("THIS".to_string(), format!("{:016b}", 3)),
+            ("THAT".to_string(), format!("{:016b}", 4)),
         ]
         .iter()
         .cloned()
@@ -194,7 +198,21 @@ fn main() -> Result<(), io::Error> {
         .cloned()
         .collect(),
     };
-    assembler.assemble();
+
+    let output_text = assembler.assemble(lines);
+
+    let output_filepath = Path::new(&args[2]);
+    let output_filepath_display = output_filepath.display();
+
+    let mut output_file = match File::create(&output_filepath) {
+        Err(why) => panic!("couldn't create {}: {}", output_filepath_display, why),
+        Ok(file) => file,
+    };
+
+    match output_file.write_all(output_text.as_bytes()) {
+        Err(why) => panic!("couldn't write to {}: {}", output_filepath_display, why),
+        Ok(_) => println!("successfully wrote to {}", output_filepath_display),
+    }
 
     Ok(())
 }
