@@ -113,7 +113,7 @@ class Parser:
         4. otherwise a c instruct
         """
         instruction_count = 0
-        for i, line in enumerate(self.input_lines):
+        for line in self.input_lines:
             line = line.strip()
             if len(line) == 0 or line.isspace() or line.startswith("//"):
                 # line is empty or a comment
