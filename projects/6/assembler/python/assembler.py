@@ -5,7 +5,6 @@ from typing import Iterator
 
 CODE_TABLE = {
     "comp": {
-        # TODO - tuples or strings? Or NamedTuples?
         # TODO - format(num'07b') instead?
         # a c1 c2 c3 c4 c5 c6
         "0": "0101010",
@@ -65,35 +64,37 @@ CODE_TABLE = {
 class BinaryDict(UserDict):
     def __setitem__(self, key, value):
         if isinstance(value, int):
-            value = format(value, '016b')
+            value = format(value, "016b")
         super().__setitem__(key, value)
 
 
-PREDEFINED_SYMBOL_TABLE = BinaryDict({
-    "R0": 0,
-    "R1": 1,
-    "R2": 2,
-    "R3": 3,
-    "R4": 4,
-    "R5": 5,
-    "R6": 6,
-    "R7": 7,
-    "R8": 8,
-    "R9": 9,
-    "R10": 10,
-    "R11": 11,
-    "R12": 12,
-    "R13": 13,
-    "R14": 14,
-    "R15": 15,
-    "SCREEN": 16384,
-    "KBD": 24576,
-    "SP": 0,
-    "LCL": 1,
-    "ARG": 2,
-    "THIS": 3,
-    "THAT": 4,
-})
+PREDEFINED_SYMBOL_TABLE = BinaryDict(
+    {
+        "R0": 0,
+        "R1": 1,
+        "R2": 2,
+        "R3": 3,
+        "R4": 4,
+        "R5": 5,
+        "R6": 6,
+        "R7": 7,
+        "R8": 8,
+        "R9": 9,
+        "R10": 10,
+        "R11": 11,
+        "R12": 12,
+        "R13": 13,
+        "R14": 14,
+        "R15": 15,
+        "SCREEN": 16384,
+        "KBD": 24576,
+        "SP": 0,
+        "LCL": 1,
+        "ARG": 2,
+        "THIS": 3,
+        "THAT": 4,
+    }
+)
 
 
 class Parser:
@@ -101,7 +102,6 @@ class Parser:
         self.input_lines = (line for line in input_filepath.open())
         self.output_filepath = output_filepath
         self.symbol_table = PREDEFINED_SYMBOL_TABLE.copy()
-        self.symbol_table_next_slot = 16
         self.seen_syms = list()
 
     def processed_lines(self) -> Iterator[str]:
@@ -162,10 +162,11 @@ class Parser:
 
     def assemble(self):
         out = "\n".join(line for line in self.processed_lines())
+        symbol_table_next_slot = 16
         for sym in self.seen_syms:
             if sym not in self.symbol_table:
-                self.symbol_table[sym] = self.symbol_table_next_slot
-                self.symbol_table_next_slot += 1
+                self.symbol_table[sym] = symbol_table_next_slot
+                symbol_table_next_slot += 1
         out = out.format(self.symbol_table)
         self.output_filepath.write_text(out)
 
