@@ -10,7 +10,6 @@ use std::collections::{HashMap, HashSet};
 extern crate strfmt;
 use strfmt::strfmt;
 
-
 // TODO - should I use &str with a lifetime based on the struct?
 struct Assembler<'a> {
     seen_syms: HashSet<String>,
@@ -90,7 +89,7 @@ impl Assembler<'_> {
         }
         let out = match strfmt(&output_lines.join("\n"), &self.symbol_table) {
             Err(why) => panic!("Something went wrong formatting {}", why),
-            Ok(output) => output
+            Ok(output) => output,
         };
 
         out
